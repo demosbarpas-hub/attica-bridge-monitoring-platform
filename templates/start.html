@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Μητρώο Γεφυρών Αττικής</title>
+  <meta http-equiv="refresh" content="10;url=/main" />
+
+  <style>
+    :root{
+      --blue-800:#0a2b6b;
+      --blue-700:#123b8c;
+      --blue-600:#1d4fb3;
+      --text:#ffffff;
+      --accent:#bcd3ff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans","Helvetica Neue",Arial,"Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+
+      background:
+        radial-gradient(1200px 800px at 80% -10%, rgba(255,255,255,0.06), transparent 60%),
+        linear-gradient(180deg, rgba(18,59,140,0.4), rgba(10,43,107,0.6)),
+        url("{{ url_for('static', filename='background.jpg') }}") center center / cover no-repeat fixed;
+
+      display:flex;align-items:center;justify-content:center;
+      padding:3rem 1.5rem;
+    }
+
+    .card{
+      max-width:1000px;
+      width:min(92vw,1000px);
+      text-align:center;
+
+      /* darker semi-transparent panel */
+      background: rgba(0, 0, 0, 0.45);
+      border:1px solid rgba(255,255,255,0.14);
+      border-radius:20px;
+      box-shadow:0 10px 40px rgba(0,0,0,0.4);
+      padding:2.25rem 2rem 2.5rem;
+      backdrop-filter: blur(4px);
+
+      animation:fadeIn 900ms cubic-bezier(.2,.8,.2,1) forwards, pop 900ms ease-out forwards;
+      opacity:0; transform:translateY(8px) scale(.985);
+      position:relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute; inset:0 0 auto 0; height:6px;
+      background:linear-gradient(90deg, #80a7ff, #dbe7ff 30%, #80a7ff 60%, #dbe7ff 100%);
+      opacity:.65;
+    }
+
+    .title{
+      font-weight:700;
+      font-size:clamp(1.35rem, 1.1rem + 1.8vw, 2.1rem);
+      line-height:1.35;
+      letter-spacing:.2px;
+      margin:0 0 .75rem 0;
+      text-wrap:balance;
+    }
+    .subtitle{
+      font-weight:400;
+      font-size:clamp(.98rem, .9rem + .4vw, 1.15rem);
+      line-height:1.6;
+      color:#f2f5ff;
+      opacity:.95;
+      text-wrap:pretty;
+      margin:0 auto;
+      max-width:70ch;
+    }
+    .note{
+      margin-top:1.25rem;
+      font-size:.9rem;
+      color:var(--accent);
+      opacity:.9;
+    }
+
+    @keyframes fadeIn{to{opacity:1; transform:none}}
+    @keyframes pop{0%{transform:translateY(8px) scale(.985)}60%{transform:translateY(0) scale(1.005)}100%{transform:translateY(0) scale(1)}}
+
+    @media (prefers-reduced-motion: reduce){
+      .card{animation:none; opacity:1; transform:none}
+    }
+  </style>
+
+  <script>
+    const REDIRECT_DELAY_MS = 1000000;
+    const TARGET = "/main";
+    const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.addEventListener("DOMContentLoaded", () => {
+      const delay = prefersReduced ? Math.max(REDIRECT_DELAY_MS - 500, 100000) : REDIRECT_DELAY_MS;
+      setTimeout(()=>{ window.location.replace(TARGET); }, delay);
+    });
+  </script>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="title">
+    <h1 id="title" class="title">Μητρώο Γεφυρών Αττικής</h1>
+    <p class="subtitle">
+      Πρακτική Άσκηση του Δημοσθένη Α. Καραμπάρπα,<br/>
+      φοιτητή ΗΜΤΥ του Πανεπιστήμιου Πατρών<br/>
+      ύπο την εποπτεία του Μιχαήλ Σ. Ανθόπουλου, Πολιτικού Μηχανικού,<br/>
+      Τμηματάρχη Κ.Δ. & Μ.Κ. Περιφέρειας Αττικής
+    </p>
+    <div class="note" aria-hidden="true">Μετάβαση σε λίγα δευτερόλεπτα…</div>
+  </main>
+</body>
+</html>
+

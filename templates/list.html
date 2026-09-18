@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Λίστα Γεφυρών</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    :root { --primary-blue:#0d2d5e; --secondary-blue:#1a73e8; --accent-red:#e74c3c; }
+    body { font-family:'Roboto',sans-serif; background:#f5f5f5; }
+    .navbar { background:var(--primary-blue); }
+    .btn-primary { background: var(--secondary-blue); border:0; }
+    .btn-danger { background: var(--accent-red); }
+    .card { border:0; box-shadow:0 2px 4px rgba(0,0,0,.1); }
+    a { text-decoration:none; }
+    .role-badge { font-weight:600; }
+  </style>
+</head>
+<body>
+
+{% include "_navbar.html" %}
+
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h4 class="card-title mb-3">Λίστα Γεφυρών</h4>
+
+          <table class="table table-hover table-striped align-middle">
+            <thead class="table">
+              <tr>
+                <th>Όνομα</th>
+                <th>Άξονας</th>
+                {% if session.get('role') == 'admin' %}
+                  <th class="text-end">Ενέργειες</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody>
+              {% if results %}
+                {% for row in results %}
+                   <tr data-id="{{ row['id'] }}" class="draggable-row" style="cursor: move;">
+                      <td>
+                        <a href="{{ url_for('bridge_details', bridge_id=row['id']) }}">
+                        {{ row['Όνομα'] }}
+                      </a>
+                    </td>
+
+                    <!-- Άξονας with robust fallbacks -->
+                    {% set axis = row.get('Άξονας') 
+                                  or row.get('Αξονας') 
+                                  or row.get('axis') 
+                                  or row.get('Axis') %}
+                    <td>{{ axis if axis else '—' }}</td>
+
+                    {% if session.get('role') == 'admin' %}
+                      <td class="text-end">
+                        <form method="post"
+                              action="{{ url_for('delete_bridge', bridge_id=row['id']) }}"
+                              onsubmit="return confirm('Σίγουρα θέλεις να διαγράψεις τη «{{ row['Όνομα'] }}»;');">
+                          <input type="hidden" name="next" value="{{ request.full_path }}">
+                          <button type="submit" class="btn btn-sm btn-danger">Διαγραφή</button>
+                        </form>
+                      </td>
+                    {% endif %}
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <!-- match actual column count: 4 if admin, else 3 -->
+                  <td colspan="{% if session.get('role') == 'admin' %}4{% else %}3{% endif %}" class="text-center">
+                    Δεν βρέθηκαν γέφυρες.
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+  // Only enable drag-and-drop for admins
+  {% if session.get('role') == 'admin' %}
+  
+    const tbody = document.querySelector('tbody');
+    
+    new Sortable(tbody, {
+      animation: 150, // Smooth animation
+      ghostClass: 'table-secondary', // Highlights the drop area
+      
+      // This runs when you drop a row
+      onEnd: function (evt) {
+        // 1. Get the new order of IDs
+        var rows = tbody.querySelectorAll('tr[data-id]');
+        var order = Array.from(rows).map(row => row.getAttribute('data-id'));
+
+        // 2. Send to backend
+        fetch("{{ url_for('update_order') }}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order: order })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            console.log("Order saved!");
+          } else {
+            alert("Error saving order.");
+          }
+        });
+      }
+    });
+
+  {% endif %}
+</script>
+</body>
+</html>
+

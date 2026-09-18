@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Γέφυρες • Χάρτης</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root { --primary-blue:#0d2d5e; --secondary-blue:#1a73e8; }
+    body { font-family:'Roboto',sans-serif; background:#f5f5f5; }
+    .navbar { background:var(--primary-blue); }
+    .role-badge { font-weight:600; }
+    #map { height: 75vh; border-radius:.75rem; }
+    .leaflet-container { font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  </style>
+</head>
+<body>
+
+{% include "_navbar.html" %}
+
+<div class="container my-4">
+  {% if not has_latlon %}
+    <div class="alert alert-warning">Δεν βρέθηκαν έγκυρες συντεταγμένες.</div>
+  {% endif %}
+  <div id="map"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // Data from backend
+  const bridges = {{ bridges_json|safe }};
+
+  // Parse focus params, e.g. ?lat=..&lon=..&id=..
+  const params = new URLSearchParams(location.search);
+  const focusLat = parseFloat(params.get('lat'));
+  const focusLon = parseFloat(params.get('lon'));
+  const focusId  = params.get('id') ? Number(params.get('id')) : null;
+  const hasFocus = Number.isFinite(focusLat) && Number.isFinite(focusLon);
+
+  // Map
+  const map = L.map('map').setView([37.98, 23.73], hasFocus ? 16 : 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
+
+  // Marker icons (default + highlighted)
+  const defaultIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25,41], iconAnchor:[12,41], popupAnchor:[1,-34], shadowSize:[41,41]
+  });
+  const highlightIcon = L.icon({
+    iconUrl: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2_hdpi.png',
+    iconSize:[27,43], iconAnchor:[13,43], popupAnchor:[0,-38]
+  });
+
+  // Add all markers
+  const group = L.featureGroup();
+  bridges.forEach(b => {
+    const isFocus = hasFocus && (focusId === b.id || (Math.abs(b.lat - focusLat) < 1e-6 && Math.abs(b.lon - focusLon) < 1e-6));
+    const icon = isFocus ? highlightIcon : defaultIcon;
+    const m = L.marker([b.lat, b.lon], { icon })
+      .bindPopup(
+        `<strong>${b.name || ''}</strong><br>${b.nomos || ''}<br>` +
+        `<a href="/bridge/${b.id}">Λεπτομέρειες</a>`
+      );
+    m.addTo(map);
+    group.addLayer(m);
+    if (isFocus) {
+      // if we’re focusing, ensure we pan/zoom and open popup
+      map.setView([b.lat, b.lon], 16);
+      m.openPopup();
+    }
+  });
+
+  // If no explicit focus, fit bounds to all
+  if (bridges.length && !hasFocus) {
+    map.fitBounds(group.getBounds().pad(0.2));
+  }
+
+  // If explicit focus coords don't match any known bridge (e.g., link from outside),
+  // still drop a highlighted marker at coords.
+  if (hasFocus && bridges.length) {
+    const matches = bridges.some(b => Math.abs(b.lat - focusLat) < 1e-6 && Math.abs(b.lon - focusLon) < 1e-6);
+    if (!matches) {
+      const m = L.marker([focusLat, focusLon], { icon: highlightIcon }).addTo(map);
+      m.bindPopup('Επιλεγμένη τοποθεσία').openPopup();
+      map.setView([focusLat, focusLon], 16);
+    }
+  }
+</script>
+</body>
+</html>
+

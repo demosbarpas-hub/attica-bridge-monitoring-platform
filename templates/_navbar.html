@@ -1,0 +1,53 @@
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('index') }}">Περιφέρεια Αττικής</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center">
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Αρχική</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('search_list') }}">Λίστα</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('search') }}">Αναζήτηση</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('map_view') }}">Χάρτης</a></li>
+
+        {% if session.get('role') == 'admin' %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('add_bridge') }}">Προσθήκη Γέφυρας</a></li>
+        {% endif %}
+
+        <li class="nav-item ms-lg-3">
+          {% if session.get('role') == 'admin' %}
+            <span class="navbar-text text-warning role-badge">Admin</span>
+          {% else %}
+            <span class="navbar-text text-light role-badge">Guest</span>
+          {% endif %}
+        </li>
+
+        <li class="nav-item dropdown ms-2">
+          <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            Σύνδεση
+          </a>
+          <div class="dropdown-menu dropdown-menu-end p-3" style="min-width:260px;" data-bs-auto-close="outside">
+            <form method="post" action="{{ url_for('login') }}">
+              <div class="mb-3">
+                <label class="form-label">Κωδικός Admin</label>
+                <input type="password" name="code" class="form-control" autocomplete="off" />
+                <div class="form-text">Άφησέ το κενό ή λάθος → Guest.</div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">Είσοδος</button>
+                {% if session.get('role') %}
+                  <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary btn-sm w-100">Logout</a>
+                {% endif %}
+              </div>
+            </form>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
